@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的数字书架</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 配置Tailwind自定义颜色和字体 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4f46e5', // 主色调：深紫色
+            secondary: '#ec4899', // 辅助色：粉红色
+            neutral: '#f3f4f6',
+            dark: '#1e293b'
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .book-shadow {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+      .book-hover {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .book-hover:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.1), 0 8px 10px -6px rgba(79, 70, 229, 0.1);
+      }
+      .text-balance {
+        text-wrap: balance;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+  <!-- 导航栏 -->
+  <header class="bg-white shadow-md sticky top-0 z-50 transition-all duration-300">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-book text-primary text-2xl"></i>
+        <h1 class="text-2xl font-bold text-primary">我的书架</h1>
+      </div>
+      
+      <!-- 桌面端导航 -->
+      <nav class="hidden md:flex items-center space-x-6">
+        <a href="#" class="category-link font-medium hover:text-primary transition-colors border-b-2 border-primary px-1">全部书籍</a>
+        <a href="#" class="category-link font-medium hover:text-primary transition-colors border-b-2 border-transparent hover:border-primary/30 px-1">小说</a>
+        <a href="#" class="category-link font-medium hover:text-primary transition-colors border-b-2 border-transparent hover:border-primary/30 px-1">科技</a>
+        <a href="#" class="category-link font-medium hover:text-primary transition-colors border-b-2 border-transparent hover:border-primary/30 px-1">历史</a>
+        <a href="#" class="category-link font-medium hover:text-primary transition-colors border-b-2 border-transparent hover:border-primary/30 px-1">哲学</a>
+        <a href="#" class="category-link font-medium hover:text-primary transition-colors border-b-2 border-transparent hover:border-primary/30 px-1">科幻</a>
+      </nav>
+      
+      <div class="flex items-center space-x-4">
+        <!-- 搜索框 -->
+        <div class="relative hidden md:block">
+          <input type="text" id="search-input" placeholder="搜索书籍..." class="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all">
+          <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+        
+        <!-- 移动端菜单按钮 -->
+        <button id="mobile-menu-btn" class="md:hidden text-gray-600 hover:text-primary transition-colors">
+          <i class="fa fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- 移动端导航菜单 -->
+    <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-gray-100">
+      <div class="container mx-auto px-4 py-3">
+        <div class="relative mb-4">
+          <input type="text" id="mobile-search-input" placeholder="搜索书籍..." class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+          <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+        </div>
+        <nav class="flex flex-col space-y-3 pb-2">
+          <a href="#" class="mobile-category-link font-medium hover:text-primary transition-colors py-1">全部书籍</a>
+          <a href="#" class="mobile-category-link font-medium hover:text-primary transition-colors py-1">小说</a>
+          <a href="#" class="mobile-category-link font-medium hover:text-primary transition-colors py-1">科技</a>
+          <a href="#" class="mobile-category-link font-medium hover:text-primary transition-colors py-1">历史</a>
+          <a href="#" class="mobile-category-link font-medium hover:text-primary transition-colors py-1">哲学</a>
+          <a href="#" class="mobile-category-link font-medium hover:text-primary transition-colors py-1">科幻</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  <main class="container mx-auto px-4 py-8">
+    <!-- 分类标题和统计 -->
+    <div class="mb-8">
+      <h2 id="category-title" class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-gray-800">全部书籍</h2>
+      <p class="text-gray-600 mt-2" id="books-count">共 <span class="font-medium text-primary">18</span> 本书籍</p>
+    </div>
+    
+    <!-- 书籍网格 -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+      <!-- 书籍将通过JavaScript动态生成 -->
+    </div>
+    
+    <!-- 空状态提示 -->
+    <div id="empty-state" class="hidden py-20 text-center">
+      <i class="fa fa-search text-gray-300 text-5xl mb-4"></i>
+      <h3 class="text-xl font-medium text-gray-500">未找到匹配的书籍</h3>
+      <p class="text-gray-400 mt-2">尝试使用其他关键词搜索</p>
+    </div>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="bg-dark text-white mt-16 py-12">
+    <div class="container mx-auto px-4">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-6 md:mb-0">
+          <div class="flex items-center space-x-2">
+            <i class="fa fa-book text-primary text-2xl"></i>
+            <h2 class="text-xl font-bold">我的书架</h2>
+          </div>
+          <p class="text-gray-400 mt-2">探索知识的海洋</p>
+        </div>
+        
+        <div class="flex space-x-6">
+          <a href="https://github.com/newbieguard" class="text-gray-400 hover:text-primary transition-colors" aria-label="GitHub">
+            <i class="fa fa-github text-xl"></i>
+          </a>
+          <a href="#" class="text-gray-400 hover:text-primary transition-colors" aria-label="Twitter">
+            <i class="fa fa-twitter text-xl"></i>
+          </a>
+          <a href="#" class="text-gray-400 hover:text-primary transition-colors" aria-label="Email">
+            <i class="fa fa-envelope text-xl"></i>
+          </a>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+        <p>&copy; 我的书架. 保留所有权利.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    // 书籍数据 - 包含书名、分类和在线阅读链接
+    const books = [
+      {
+        title: "牧神记",
+        category: "小说",
+        url: "./牧神记.txt"
+      },
+    ];
+
+    // 渲染书籍到页面
+    function renderBooks(booksList) {
+      const booksGrid = document.querySelector('.grid');
+      const emptyState = document.getElementById('empty-state');
+      
+      // 清空网格
+      booksGrid.innerHTML = '';
+      
+      // 显示或隐藏空状态
+      if (booksList.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      } else {
+        emptyState.classList.add('hidden');
+      }
+      
+      // 更新书籍数量统计
+      document.querySelector('#books-count span').textContent = booksList.length;
+      
+      // 遍历书籍列表，创建书籍卡片
+      booksList.forEach(book => {
+        // 创建书籍卡片链接
+        const bookCard = document.createElement('a');
+        bookCard.href = book.url;
+        bookCard.target = '_blank'; // 在新标签页打开
+        bookCard.className = 'book-hover book-shadow bg-white rounded-lg overflow-hidden flex flex-col h-full group';
+        
+        // 书籍封面（使用书名作为封面内容）
+        const bookCover = document.createElement('div');
+        
+        // 为不同分类设置不同的渐变色
+        const categoryColors = {
+          '小说': 'from-blue-500 to-indigo-600',
+          '科技': 'from-emerald-500 to-teal-600',
+          '历史': 'from-amber-500 to-orange-600',
+          '哲学': 'from-purple-500 to-pink-600',
+          '科幻': 'from-slate-700 to-indigo-800'
+        };
+        
+        const bgClass = categoryColors[book.category] || 'from-primary to-primary/80';
+        
+        bookCover.className = `bg-gradient-to-br ${bgClass} flex-grow flex items-center justify-center p-4 text-white text-center relative overflow-hidden`;
+        bookCover.style.minHeight = '200px';
+        
+        // 添加装饰性元素
+        bookCover.innerHTML += `
+          <div class="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -mr-10 -mt-10 transition-transform group-hover:scale-150 duration-500"></div>
+          <div class="absolute bottom-0 left-0 w-16 h-16 bg-white/10 rounded-full -ml-8 -mb-8 transition-transform group-hover:scale-150 duration-500 delay-100"></div>
+        `;
+        
+        // 创建书名元素
+        const titleElement = document.createElement('h3');
+        titleElement.className = 'font-bold leading-relaxed text-balance relative z-10';
+        
+        // 根据标题长度调整字体大小
+        const titleLength = book.title.length;
+        if (titleLength <= 5) {
+          titleElement.classList.add('text-xl');
+        } else if (titleLength <= 10) {
+          titleElement.classList.add('text-lg');
+        } else if (titleLength <= 15) {
+          titleElement.classList.add('text-base');
+        } else {
+          titleElement.classList.add('text-sm');
+        }
+        
+        titleElement.textContent = book.title;
+        bookCover.prepend(titleElement);
+        
+        // 书籍分类标签
+        const bookCategory = document.createElement('div');
+        bookCategory.className = 'bg-gray-50 py-2 px-3 text-center text-sm text-gray-600';
+        bookCategory.textContent = book.category;
+        
+        // 组装卡片
+        bookCard.appendChild(bookCover);
+        bookCard.appendChild(bookCategory);
+        
+        // 添加到网格
+        booksGrid.appendChild(bookCard);
+      });
+    }
+
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      // 初始渲染所有书籍
+      renderBooks(books);
+      
+      // 导航栏滚动效果
+      const header = document.querySelector('header');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) {
+          header.classList.add('py-2', 'shadow-lg');
+          header.classList.remove('py-4', 'shadow-md');
+        } else {
+          header.classList.add('py-4', 'shadow-md');
+          header.classList.remove('py-2', 'shadow-lg');
+        }
+      });
+      
+      // 移动端菜单切换
+      const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+      const mobileMenu = document.getElementById('mobile-menu');
+      
+      mobileMenuBtn.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+        // 切换图标
+        const icon = mobileMenuBtn.querySelector('i');
+        if (mobileMenu.classList.contains('hidden')) {
+          icon.classList.remove('fa-times');
+          icon.classList.add('fa-bars');
+        } else {
+          icon.classList.remove('fa-bars');
+          icon.classList.add('fa-times');
+        }
+      });
+      
+      // 搜索功能
+      const searchInputs = [
+        document.getElementById('search-input'),
+        document.getElementById('mobile-search-input')
+      ];
+      
+      searchInputs.forEach(input => {
+        if (input) {
+          input.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            if (!searchTerm) {
+              // 如果搜索词为空，显示所有书籍
+              renderBooks(books);
+              document.getElementById('category-title').textContent = '全部书籍';
+              updateActiveCategory('全部书籍');
+              return;
+            }
+            
+            // 过滤匹配的书籍
+            const filteredBooks = books.filter(book => 
+              book.title.toLowerCase().includes(searchTerm) || 
+              book.category.toLowerCase().includes(searchTerm)
+            );
+            
+            // 更新显示
+            renderBooks(filteredBooks);
+            document.getElementById('category-title').textContent = `搜索结果: "${searchTerm}"`;
+          });
+        }
+      });
+      
+      // 分类导航功能
+      const categoryLinks = [
+        ...document.querySelectorAll('.category-link'),
+        ...document.querySelectorAll('.mobile-category-link')
+      ];
+      
+      categoryLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const category = link.textContent;
+          
+          // 更新分类标题
+          document.getElementById('category-title').textContent = category;
+          
+          // 过滤书籍
+          if (category === '全部书籍') {
+            renderBooks(books);
+          } else {
+            const filteredBooks = books.filter(book => book.category === category);
+            renderBooks(filteredBooks);
+          }
+          
+          // 更新活跃分类样式
+          updateActiveCategory(category);
+          
+          // 如果是移动端，点击后关闭菜单
+          if (link.classList.contains('mobile-category-link')) {
+            mobileMenu.classList.add('hidden');
+            const icon = mobileMenuBtn.querySelector('i');
+            icon.classList.remove('fa-times');
+            icon.classList.add('fa-bars');
+          }
+        });
+      });
+      
+      // 更新活跃分类的样式
+      function updateActiveCategory(activeCategory) {
+        // 桌面端导航
+        document.querySelectorAll('.category-link').forEach(link => {
+          if (link.textContent === activeCategory) {
+            link.classList.add('text-primary', 'border-primary');
+            link.classList.remove('border-transparent');
+          } else {
+            link.classList.remove('text-primary', 'border-primary');
+            link.classList.add('border-transparent');
+          }
+        });
+        
+        // 移动端导航
+        document.querySelectorAll('.mobile-category-link').forEach(link => {
+          if (link.textContent === activeCategory) {
+            link.classList.add('text-primary');
+          } else {
+            link.classList.remove('text-primary');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
+
